@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  namespace: {{ include "ecr-login-renew.namespace" . }}
+  name: {{ include "ecr-login-renew.cronJob" . }}
+  labels:
+{{ include "ecr-login-renew.labels" . | indent 4 }}
+spec:
+  schedule: "0 */6 * * *"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+{{ include "ecr-login-renew.podLabels" . | indent 12 }}
+        spec:
+          serviceAccountName: {{ include "ecr-login-renew.serviceAccount" . }}
+          terminationGracePeriodSeconds: 0
+          restartPolicy: Never
+          containers:
+          - name: ecr-login-renew
+            imagePullPolicy: IfNotPresent
+            image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+            env:
+              - name: AWS_ACCESS_KEY_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ include "ecr-login-renew.secret" . }}
+                    key: AWS_ACCESS_KEY_ID
+              - name: AWS_SECRET_ACCESS_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: {{ include "ecr-login-renew.secret" . }}
+                    key: AWS_SECRET_ACCESS_KEY
+              - name: AWS_REGION
+                value: {{ .Values.ecr.region }}
+              - name: DOCKER_SECRET_NAME
+                value: {{ .Values.secretName }}
+              - name: TARGET_NAMESPACE
+                value: {{ join "," .Values.targetNamespaces }}
+              - name: EXCLUDE_NAMESPACE
+                value: {{ join "," .Values.excludeNamespaces }}
+              - name: DOCKER_REGISTRIES
+                value: {{ join "," .Values.ecr.url }}
+          {{- if .Values.nodeSelector }}
+          nodeSelector:
+    {{ toYaml .Values.nodeSelector | indent 8 }}
+          {{- end }}

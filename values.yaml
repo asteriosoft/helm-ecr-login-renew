@@ -1,0 +1,28 @@
+# -- The name of the secret to create containing the Docker credentials for ECR
+secretName: docker-ecr
+
+# -- List of target namespaces to create docker secrets in
+targetNamespaces:
+  - default
+
+# -- List of namespaces in which the secret will not be created
+excludeNamespaces: null
+
+ecr:
+  # -- AWS region where the registry is located
+  region: ""
+  # -- AWS account access key id
+  accessKeyId: ""
+  # -- AWS account secret access key
+  secretAccessKey: ""
+  # -- By default the tool will create credentials for: https://[ACCOUNT_ID].dkr.ecr.[region].amazonaws.com. If you need credentials for multiple ECR instances (for different regions for example), you can populate this value with a comma separated list
+  url: null
+  # - https://[ACCOUNT_ID].dkr.ecr.[region].amazonaws.com
+
+image:
+  # -- Source image repository
+  repository: nabsul/k8s-ecr-login-renew
+  # -- Source image tag
+  tag: v1.7.1
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
